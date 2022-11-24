@@ -23,6 +23,18 @@ private:
     uint64_t vitality;
 };
 
+template <typename species_t>
+using Carnivore = Organism<species_t, true, false>;
+
+template <typename species_t>
+using Omnivore = Organism<species_t, true, true>;
+
+template <typename species_t>
+using Herbivore = Organism<species_t, false, true>;
+
+template <typename species_t>
+using Plant = Organism<species_t, false, false>;
+
 /*
 template <typename species_t, bool sp1_eats_m, bool sp1_eats_p, bool sp2_eats_m, bool sp2_eats_p>
 constexpr std::tuple<Organism<species_t, sp1_eats_m, sp1_eats_p>,
