@@ -140,6 +140,7 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
                     {Organism<species_t, sp1_eats_m, sp1_eats_p>(organism1.get_species(), 0)};
             Organism<species_t, sp2_eats_m, sp2_eats_p> modifiedOrganism2 =
                     {Organism<species_t, sp2_eats_m, sp2_eats_p>(organism2.get_species(), 0)};
+
             return std::make_tuple(modifiedOrganism1, modifiedOrganism2, std::nullopt);
         }
     }
@@ -154,6 +155,7 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
             Organism<species_t, sp2_eats_m, sp2_eats_p> modifiedOrganism2 =
                         {Organism<species_t, sp2_eats_m, sp2_eats_p>(organism2.get_species(),
                         (organism2.get_vitality() + organism1.get_vitality()))};
+
             return std::make_tuple(modifiedOrganism1, modifiedOrganism2, std::nullopt);
 
         } else {
