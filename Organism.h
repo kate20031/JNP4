@@ -54,7 +54,7 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
 
     // 3.
     if (organism1.is_dead() || organism2.is_dead()) {
-        return std::make_tuple(organism1, organism2);
+        return std::make_tuple(Organism(organism1), Organism(organism2));
     }
 
     //4.
