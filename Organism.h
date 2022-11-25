@@ -24,6 +24,45 @@ public:
     constexpr bool is_dead() const {
         return vitality == 0;
     }
+
+    constexpr bool isCarnivore() {
+        return can_eat_meat && !can_eat_plants;
+    }
+
+    constexpr bool isOmnivore() {
+        return can_eat_meat && can_eat_plants;
+    }
+
+    constexpr bool isHerbivore() {
+        return !can_eat_meat && can_eat_plants;
+    }
+
+    constexpr bool isPlant() {
+        return !can_eat_meat && !can_eat_plants;
+    }
+
+    static constexpr uint64_t fight(uint64_t b) {
+        return b / 2;
+    }
+
+    static constexpr uint64_t devour(uint64_t b) {
+        return b;
+    }
+
+    constexpr Organism<species_t, can_eat_meat, can_eat_plants>
+    eat(uint64_t prey, uint64_t (*gain)(uint64_t)) {
+        Organism<species_t, can_eat_meat, can_eat_plants> predator =
+            {Organism<species_t, can_eat_meat, can_eat_plants>(species,
+                                                               vitality + gain(prey))};
+        return predator;
+    }
+
+    constexpr Organism<species_t, can_eat_meat, can_eat_plants>
+    die() {
+        Organism<species_t, can_eat_meat, can_eat_plants> prey =
+            {Organism<species_t, can_eat_meat, can_eat_plants>(species, 0)};
+        return prey;
+    }
 private:
     const species_t species;
     uint64_t vitality;
@@ -41,49 +80,6 @@ using Herbivore = Organism<species_t, false, true>;
 template <typename species_t>
 using Plant = Organism<species_t, false, false>;
 
-template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-static constexpr bool isCarnivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
-    return can_eat_meat && !can_eat_plants;
-}
-
-template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-static constexpr bool isOmnivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
-    return can_eat_meat && can_eat_plants;
-}
-
-template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-static constexpr bool isHerbivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
-    return !can_eat_meat && can_eat_plants;
-}
-
-template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-static constexpr bool isPlant(Organism<species_t, can_eat_meat, can_eat_plants>&) {
-    return !can_eat_meat && !can_eat_plants;
-}
-
-static constexpr uint64_t fight(uint64_t a, uint64_t b) {
-    return a + b / 2;
-}
-
-static constexpr uint64_t profit(uint64_t a, uint64_t b) {
-    return a + b;
-}
-
-template <typename species_t, bool sp1_eats_m, bool sp1_eats_p, bool sp2_eats_m, bool sp2_eats_p>
-static constexpr std::pair<Organism<species_t, sp1_eats_m, sp1_eats_p>,
-                           Organism<species_t, sp2_eats_m, sp2_eats_p>>
-eat(Organism<species_t, sp1_eats_m, sp1_eats_p> predator,
-    Organism<species_t, sp2_eats_m, sp2_eats_p> prey,
-    uint64_t (*gain)(uint64_t, uint64_t)) {
-    Organism<species_t, sp1_eats_m, sp1_eats_p> fedPredator =
-        {Organism<species_t, sp1_eats_m, sp1_eats_p>(predator.get_species(),
-                                                     gain(predator.get_vitality(),
-                                                          prey.get_vitality()))};
-    Organism<species_t, sp2_eats_m, sp2_eats_p> deadPrey =
-        {Organism<species_t, sp2_eats_m, sp2_eats_p>(prey.get_species(), 0)};
-    return std::make_pair(fedPredator, deadPrey);
-}
-
 template <typename species_t, bool sp1_eats_m, bool sp1_eats_p, bool sp2_eats_m, bool sp2_eats_p>
 constexpr std::tuple<Organism<species_t, sp1_eats_m, sp1_eats_p>,
                      Organism<species_t, sp2_eats_m, sp2_eats_p>,
@@ -92,7 +88,7 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
           Organism<species_t, sp2_eats_m, sp2_eats_p> organism2) {
 
     // If both are plants.
-    static_assert(!(isPlant(organism1) && isPlant(organism2)));
+    static_assert(!(organism1.isPlant() && organism2.isPlant()));
 
     // If any is dead.
     if (organism1.is_dead() || organism2.is_dead()) {
@@ -109,20 +105,18 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
     }
 
     // If organisms can't eat each other then there are no results of meeting.
-    if ((isHerbivore(organism1) && isHerbivore(organism2)) ||
-        (isCarnivore(organism1) && isPlant(organism2)) ||
-        (isPlant(organism1) && isCarnivore(organism2))) {
+    if ((organism1.isHerbivore() && organism2.isHerbivore()) ||
+        (organism1.isCarnivore() && organism2.isPlant()) ||
+        (organism1.isPlant() && organism2.isCarnivore())) {
         return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
     }
 
     // If both of organisms are animals.
-    if (!isPlant(organism1) && !isPlant(organism2)) {
+    if (!organism1.isPlant() && !organism2.isPlant()) {
         if (organism1.get_vitality() < organism2.get_vitality()) {
-            auto modifiedOrganisms = eat(organism2, organism1, fight);
-            return std::make_tuple(modifiedOrganisms.second, modifiedOrganisms.first, std::nullopt);
+            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), organism2.fight), std::nullopt);
         } else if (organism1.get_vitality() > organism2.get_vitality()) {
-            auto modifiedOrganisms = eat(organism1, organism2, fight);
-            return std::make_tuple(modifiedOrganisms.first, modifiedOrganisms.second, std::nullopt);
+            return std::make_tuple(organism1.eat(organism2.get_vitality(), organism1.fight), organism2.die(), std::nullopt);
         } else {
             Organism<species_t, sp1_eats_m, sp1_eats_p> modifiedOrganism1 =
                     {Organism<species_t, sp1_eats_m, sp1_eats_p>(organism1.get_species(), 0)};
@@ -133,30 +127,26 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
     }
 
     // If Omnivore meets Plant or Herbivore meets Plant.
-    if ((isPlant(organism1) || isPlant(organism2)) && (!isCarnivore(organism1) && !isCarnivore(organism2))) {
-        if (isPlant(organism1)) {
-            auto modifiedOrganisms = eat(organism2, organism1, profit);
-            return std::make_tuple(modifiedOrganisms.second, modifiedOrganisms.first, std::nullopt);
+    if ((organism1.isPlant() || organism2.isPlant()) && (!organism1.isCarnivore() && !organism2.isCarnivore())) {
+        if (organism1.isPlant()) {
+            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), organism2.devour), std::nullopt);
         } else {
-            auto modifiedOrganisms = eat(organism1, organism2, profit);
-            return std::make_tuple(modifiedOrganisms.first, modifiedOrganisms.second, std::nullopt);
+            return std::make_tuple(organism1.eat(organism2.get_vitality(), organism1.devour), organism2.die(), std::nullopt);
         }
     }
 
     // If only one of organisms can eat another.
-    if (isHerbivore(organism1)) {
+    if (organism1.isHerbivore()) {
         if (organism1.get_vitality() >= organism2.get_vitality()) {
             return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
         } else {
-            auto modifiedOrganisms = eat(organism2, organism1, fight);
-            return std::make_tuple(modifiedOrganisms.second, modifiedOrganisms.first, std::nullopt);
+            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), organism2.fight), std::nullopt);
         }
     } else {
         if (organism2.get_vitality() >= organism1.get_vitality()) {
             return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
         } else {
-            auto modifiedOrganisms = eat(organism1, organism2, fight);
-            return std::make_tuple(modifiedOrganisms.first, modifiedOrganisms.second, std::nullopt);
+            return std::make_tuple(organism1.eat(organism2.get_vitality(), organism1.fight), organism2.die(), std::nullopt);
         }
     }
 }
