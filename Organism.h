@@ -42,36 +42,36 @@ template <typename species_t>
 using Plant = Organism<species_t, false, false>;
 
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-constexpr bool isCarnivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
+static constexpr bool isCarnivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
     return can_eat_meat && !can_eat_plants;
 }
 
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-constexpr bool isOmnivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
+static constexpr bool isOmnivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
     return can_eat_meat && can_eat_plants;
 }
 
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-constexpr bool isHerbivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
+static constexpr bool isHerbivore(Organism<species_t, can_eat_meat, can_eat_plants>&) {
     return !can_eat_meat && can_eat_plants;
 }
 
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
-constexpr bool isPlant(Organism<species_t, can_eat_meat, can_eat_plants>&) {
+static constexpr bool isPlant(Organism<species_t, can_eat_meat, can_eat_plants>&) {
     return !can_eat_meat && !can_eat_plants;
 }
 
-constexpr uint64_t fight(uint64_t a, uint64_t b) {
+static constexpr uint64_t fight(uint64_t a, uint64_t b) {
     return a + b / 2;
 }
 
-constexpr uint64_t profit(uint64_t a, uint64_t b) {
+static constexpr uint64_t profit(uint64_t a, uint64_t b) {
     return a + b;
 }
 
 template <typename species_t, bool sp1_eats_m, bool sp1_eats_p, bool sp2_eats_m, bool sp2_eats_p>
-constexpr std::pair<Organism<species_t, sp1_eats_m, sp1_eats_p>,
-                    Organism<species_t, sp2_eats_m, sp2_eats_p>>
+static constexpr std::pair<Organism<species_t, sp1_eats_m, sp1_eats_p>,
+                           Organism<species_t, sp2_eats_m, sp2_eats_p>>
 eat(Organism<species_t, sp1_eats_m, sp1_eats_p> predator,
     Organism<species_t, sp2_eats_m, sp2_eats_p> prey,
     uint64_t (*gain)(uint64_t, uint64_t)) {
