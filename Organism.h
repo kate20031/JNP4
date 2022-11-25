@@ -47,16 +47,31 @@ constexpr std::tuple<Organism<species_t, sp1_eats_m, sp1_eats_p>,
 encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
           Organism<species_t, sp2_eats_m, sp2_eats_p> organism2) {
     // 1.
-    static_assert(std::is_same<Organism<species_t, sp1_eats_m, sp1_eats_p>,
-                               Organism<species_t, sp1_eats_m, sp1_eats_p>>::value);
+    static_assert(sp1_eats_m == sp2_eats_m && sp1_eats_p == sp2_eats_p);
 
     // 2.
     static_assert(sp1_eats_m || sp1_eats_p || sp2_eats_m || sp2_eats_p);
 
     // 3.
-    if constexpr(organism1.is_dead() || organism2.is_dead()) { // nie kompiluje się (nie wiem dlaczego)
+    if (organism1.is_dead() || organism2.is_dead()) {
         return std::make_tuple(organism1, organism2);
     }
+
+    //4.
+
+
+    // 5.
+
+
+    // 6.
+
+
+    // 7.
+
+
+    // 8.
+
+
 
     return std::make_tuple(organism1, organism2);
 }
