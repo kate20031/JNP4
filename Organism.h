@@ -2,6 +2,7 @@
 #define ORGANISM_H
 
 #include <tuple>
+#include <optional>
 #include <cassert>
 
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
@@ -54,11 +55,20 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
 
     // 3.
     if (organism1.is_dead() || organism2.is_dead()) {
-        return std::make_tuple(Organism(organism1), Organism(organism2));
+        return std::make_tuple(Organism(organism1),
+                               Organism(organism2),
+                               std::nullopt);
     }
 
-    //4.
-
+    // 4.
+    if (organism1.get_species() == organism2.get_species()) {
+        std::optional<Organism<species_t, sp1_eats_m, sp1_eats_p>> child =
+        {Organism<species_t, sp1_eats_m, sp1_eats_p>(organism1.get_species(),
+        (organism1.get_vitality() + organism2.get_vitality()) / 2)};
+        return std::make_tuple(Organism(organism1),
+                               Organism(organism2),
+                               child);
+    }
 
     // 5.
 
@@ -73,7 +83,9 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
 
 
 
-    return std::make_tuple(organism1, organism2);
+    return std::make_tuple(Organism(organism1),
+                           Organism(organism2),
+                           std::nullopt);
 }
 
 /*
