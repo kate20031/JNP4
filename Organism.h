@@ -41,12 +41,12 @@ public:
         return !can_eat_meat && !can_eat_plants;
     }
 
-    static constexpr uint64_t fight(uint64_t opponent) {
-        return opponent / 2;
+    static constexpr uint64_t fight(uint64_t opponentsVitality) {
+        return opponentsVitality / 2;
     }
 
-    static constexpr uint64_t devour(uint64_t opponent) {
-        return opponent;
+    static constexpr uint64_t devour(uint64_t opponentsVitality) {
+        return opponentsVitality;
     }
 
     constexpr Organism<species_t, can_eat_meat, can_eat_plants>
