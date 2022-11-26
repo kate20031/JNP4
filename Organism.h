@@ -41,19 +41,19 @@ public:
         return !can_eat_meat && !can_eat_plants;
     }
 
-    static constexpr uint64_t fight(uint64_t b) {
-        return b / 2;
+    static constexpr uint64_t fight(uint64_t opponent) {
+        return opponent / 2;
     }
 
-    static constexpr uint64_t devour(uint64_t b) {
-        return b;
+    static constexpr uint64_t devour(uint64_t opponent) {
+        return opponent;
     }
 
     constexpr Organism<species_t, can_eat_meat, can_eat_plants>
-    eat(uint64_t prey, uint64_t (*gain)(uint64_t)) {
+    eat(const uint64_t preysVitality, uint64_t (*gain)(uint64_t)) {
         Organism<species_t, can_eat_meat, can_eat_plants> predator =
             {Organism<species_t, can_eat_meat, can_eat_plants>(species,
-                                                               vitality + gain(prey))};
+                                                               vitality + gain(preysVitality))};
         return predator;
     }
 
@@ -118,11 +118,7 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
         } else if (organism1.get_vitality() > organism2.get_vitality()) {
             return std::make_tuple(organism1.eat(organism2.get_vitality(), organism1.fight), organism2.die(), std::nullopt);
         } else {
-            Organism<species_t, sp1_eats_m, sp1_eats_p> modifiedOrganism1 =
-                    {Organism<species_t, sp1_eats_m, sp1_eats_p>(organism1.get_species(), 0)};
-            Organism<species_t, sp2_eats_m, sp2_eats_p> modifiedOrganism2 =
-                    {Organism<species_t, sp2_eats_m, sp2_eats_p>(organism2.get_species(), 0)};
-            return std::make_tuple(modifiedOrganism1, modifiedOrganism2, std::nullopt);
+            return std::make_tuple(organism1.die(), organism2.die(), std::nullopt);
         }
     }
 
