@@ -86,6 +86,8 @@ constexpr std::tuple<Organism<species_t, sp1_eats_m, sp1_eats_p>,
                      std::optional<Organism<species_t, sp1_eats_m, sp1_eats_p>>>
 encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
           Organism<species_t, sp2_eats_m, sp2_eats_p> organism2) {
+    uint64_t (*fight)(uint64_t) = Organism<species_t, sp1_eats_m, sp1_eats_p>::fight;
+    uint64_t (*devour)(uint64_t) = Organism<species_t, sp1_eats_m, sp1_eats_p>::devour;
 
     // If both are plants.
     static_assert(!(organism1.isPlant() && organism2.isPlant()));
@@ -112,22 +114,22 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
     }
 
     // If both of organisms are animals.
-    if (!organism1.isPlant() && !organism2.isPlant()) {
+    if ((organism1.isCarnivore() || organism1.isOmnivore()) && (organism2.isCarnivore() || organism2.isOmnivore())) {
         if (organism1.get_vitality() < organism2.get_vitality()) {
-            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), organism2.fight), std::nullopt);
+            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), fight), std::nullopt);
         } else if (organism1.get_vitality() > organism2.get_vitality()) {
-            return std::make_tuple(organism1.eat(organism2.get_vitality(), organism1.fight), organism2.die(), std::nullopt);
+            return std::make_tuple(organism1.eat(organism2.get_vitality(), fight), organism2.die(), std::nullopt);
         } else {
             return std::make_tuple(organism1.die(), organism2.die(), std::nullopt);
         }
     }
 
     // If Omnivore meets Plant or Herbivore meets Plant.
-    if ((organism1.isPlant() || organism2.isPlant()) && (!organism1.isCarnivore() && !organism2.isCarnivore())) {
+    if ((organism1.isPlant() || organism2.isPlant()) && !organism1.isCarnivore() && !organism2.isCarnivore()) {
         if (organism1.isPlant()) {
-            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), organism2.devour), std::nullopt);
+            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), devour), std::nullopt);
         } else {
-            return std::make_tuple(organism1.eat(organism2.get_vitality(), organism1.devour), organism2.die(), std::nullopt);
+            return std::make_tuple(organism1.eat(organism2.get_vitality(), devour), organism2.die(), std::nullopt);
         }
     }
 
@@ -136,22 +138,29 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
         if (organism1.get_vitality() >= organism2.get_vitality()) {
             return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
         } else {
-            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), organism2.fight), std::nullopt);
+            return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), fight), std::nullopt);
         }
     } else {
         if (organism2.get_vitality() >= organism1.get_vitality()) {
             return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
         } else {
-            return std::make_tuple(organism1.eat(organism2.get_vitality(), organism1.fight), organism2.die(), std::nullopt);
+            return std::make_tuple(organism1.eat(organism2.get_vitality(), fight), organism2.die(), std::nullopt);
         }
     }
 }
 
-/*
+template <typename species_t, bool sp1_eats_m, bool sp1_eats_p, bool sp2_eats_m, bool sp2_eats_p>
+constexpr Organism<species_t, sp1_eats_m, sp1_eats_p>
+operator+(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
+          const Organism<species_t, sp2_eats_m, sp2_eats_p>& organism2) {
+    auto encounter_result = encounter(organism1, organism2);
+    return get<0>(encounter_result);
+}
+
 template <typename species_t, bool sp1_eats_m, bool sp1_eats_p, typename ... Args>
 constexpr Organism<species_t, sp1_eats_m, sp1_eats_p>
 encounter_series(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1, Args ... args) {
+    return (organism1 + ... + args);
 }
-*/
 
 #endif // ORGANISM_H
