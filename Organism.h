@@ -8,7 +8,7 @@
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
 class Organism {
 public:
-    constexpr Organism(species_t const &species, uint64_t vitality)
+    constexpr Organism(const species_t &species, const uint64_t vitality)
         : species(species), vitality(vitality) {
         static_assert(std::equality_comparable<species_t>);
     }
@@ -25,47 +25,46 @@ public:
         return vitality == 0;
     }
 
-    constexpr bool isCarnivore() {
+    constexpr bool isCarnivore() const {
         return can_eat_meat && !can_eat_plants;
     }
 
-    constexpr bool isOmnivore() {
+    constexpr bool isOmnivore() const {
         return can_eat_meat && can_eat_plants;
     }
 
-    constexpr bool isHerbivore() {
+    constexpr bool isHerbivore() const {
         return !can_eat_meat && can_eat_plants;
     }
 
-    constexpr bool isPlant() {
+    constexpr bool isPlant() const {
         return !can_eat_meat && !can_eat_plants;
     }
 
-    static constexpr uint64_t fight(uint64_t opponentsVitality) {
+    static constexpr uint64_t fight(const uint64_t opponentsVitality) {
         return opponentsVitality / 2;
     }
 
-    static constexpr uint64_t devour(uint64_t opponentsVitality) {
+    static constexpr uint64_t devour(const uint64_t opponentsVitality) {
         return opponentsVitality;
     }
 
     constexpr Organism<species_t, can_eat_meat, can_eat_plants>
-    eat(const uint64_t preysVitality, uint64_t (*gain)(uint64_t)) {
+    eat(const uint64_t preysVitality, uint64_t (*gain)(uint64_t)) const {
         Organism<species_t, can_eat_meat, can_eat_plants> predator =
-            {Organism<species_t, can_eat_meat, can_eat_plants>(species,
-                                                               vitality + gain(preysVitality))};
+            {Organism<species_t, can_eat_meat, can_eat_plants>(species, vitality + gain(preysVitality))};
         return predator;
     }
 
     constexpr Organism<species_t, can_eat_meat, can_eat_plants>
-    die() {
+    die() const {
         Organism<species_t, can_eat_meat, can_eat_plants> prey =
             {Organism<species_t, can_eat_meat, can_eat_plants>(species, 0)};
         return prey;
     }
 private:
     const species_t species;
-    uint64_t vitality;
+    const uint64_t vitality;
 };
 
 template <typename species_t>
@@ -151,7 +150,7 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
 
 template <typename species_t, bool sp1_eats_m, bool sp1_eats_p, bool sp2_eats_m, bool sp2_eats_p>
 constexpr Organism<species_t, sp1_eats_m, sp1_eats_p>
-operator+(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
+operator+(const Organism<species_t, sp1_eats_m, sp1_eats_p>& organism1,
           const Organism<species_t, sp2_eats_m, sp2_eats_p>& organism2) {
     auto encounter_result = encounter(organism1, organism2);
     return get<0>(encounter_result);
