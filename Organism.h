@@ -6,12 +6,11 @@
 #include <cassert>
 
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
+requires std::equality_comparable<species_t>
 class Organism {
 public:
     constexpr Organism(const species_t& species, const uint64_t vitality)
-        : species(species), vitality(vitality) {
-        static_assert(std::equality_comparable<species_t>);
-    }
+        : species(species), vitality(vitality) {}
 
     constexpr const species_t &get_species() const {
         return species;
