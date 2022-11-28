@@ -4,6 +4,8 @@
 #include <tuple>
 #include <optional>
 #include <cassert>
+#include <concepts>
+#include <cstdint>
 
 template <typename species_t, bool can_eat_meat, bool can_eat_plants>
 requires std::equality_comparable<species_t>
@@ -24,19 +26,19 @@ public:
         return vitality == 0;
     }
 
-    static constexpr bool isCarnivore() {
+    static constexpr bool is_carnivore() {
         return can_eat_meat && !can_eat_plants;
     }
 
-    static constexpr bool isOmnivore() {
+    static constexpr bool is_omnivore() {
         return can_eat_meat && can_eat_plants;
     }
 
-    static constexpr bool isHerbivore() {
+    static constexpr bool is_herbivore() {
         return !can_eat_meat && can_eat_plants;
     }
 
-    static constexpr bool isPlant() {
+    static constexpr bool is_plant() {
         return !can_eat_meat && !can_eat_plants;
     }
 
@@ -87,16 +89,16 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
     uint64_t (*fight)(uint64_t) = Organism<species_t, sp1_eats_m, sp1_eats_p>::fight;
     uint64_t (*devour)(uint64_t) = Organism<species_t, sp1_eats_m, sp1_eats_p>::devour;
 
-    // If both are plants.
-    static_assert(!(organism1.isPlant() && organism2.isPlant()));
+    // 2. If both are plants.
+    static_assert(!(organism1.is_plant() && organism2.is_plant()));
 
-    // If any is dead.
+    // 3. If any is dead.
     if (organism1.is_dead() || organism2.is_dead()) {
         return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
     }
 
-    // If species types are the same.
-    if (organism1.get_species() == organism2.get_species()) {
+    // 4. If species types are the same.
+    if (organism1.get_species() == organism2.get_species() && sp1_eats_m == sp2_eats_m && sp1_eats_p == sp2_eats_p) {
         std::optional<Organism<species_t, sp1_eats_m, sp1_eats_p>> baby =
                 {Organism<species_t, sp1_eats_m, sp1_eats_p>(organism1.get_species(),
                                                              (organism1.get_vitality() +
@@ -104,15 +106,15 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
         return std::make_tuple(Organism(organism1), Organism(organism2), baby);
     }
 
-    // If organisms can't eat each other.
-    if ((organism1.isHerbivore() && organism2.isHerbivore()) ||
-        (organism1.isCarnivore() && organism2.isPlant()) ||
-        (organism1.isPlant() && organism2.isCarnivore())) {
+    // 5. If organisms can't eat each other.
+    if ((organism1.is_herbivore() && organism2.is_herbivore()) ||
+        (organism1.is_carnivore() && organism2.is_plant()) ||
+        (organism1.is_plant() && organism2.is_carnivore())) {
         return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
     }
 
-    // If both can eat each other.
-    if ((organism1.isCarnivore() || organism1.isOmnivore()) && (organism2.isCarnivore() || organism2.isOmnivore())) {
+    // 6. If both can eat each other.
+    if ((organism1.is_carnivore() || organism1.is_omnivore()) && (organism2.is_carnivore() || organism2.is_omnivore())) {
         if (organism1.get_vitality() < organism2.get_vitality()) {
             return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), fight), std::nullopt);
         } else if (organism1.get_vitality() > organism2.get_vitality()) {
@@ -122,17 +124,17 @@ encounter(Organism<species_t, sp1_eats_m, sp1_eats_p> organism1,
         }
     }
 
-    // If Omnivore meets Plant or Herbivore meets Plant.
-    if ((organism1.isPlant() || organism2.isPlant()) && !organism1.isCarnivore() && !organism2.isCarnivore()) {
-        if (organism1.isPlant()) {
+    // 7. If Omnivore meets Plant or Herbivore meets Plant.
+    if ((organism1.is_plant() || organism2.is_plant()) && !organism1.is_carnivore() && !organism2.is_carnivore()) {
+        if (organism1.is_plant()) {
             return std::make_tuple(organism1.die(), organism2.eat(organism1.get_vitality(), devour), std::nullopt);
         } else {
             return std::make_tuple(organism1.eat(organism2.get_vitality(), devour), organism2.die(), std::nullopt);
         }
     }
 
-    // If only one can eat another.
-    if (organism1.isHerbivore()) {
+    // 8. If only one can eat another.
+    if (organism1.is_herbivore()) {
         if (organism1.get_vitality() >= organism2.get_vitality()) {
             return std::make_tuple(Organism(organism1), Organism(organism2), std::nullopt);
         } else {
